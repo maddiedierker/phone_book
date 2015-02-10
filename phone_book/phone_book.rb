@@ -2,11 +2,12 @@
 require 'rubygems'
 require 'sqlite3'
 $phone_book_db = SQLite3::Database.new('phone_book.db')
+$phone_book_db.results_as_hash = true
 
     def create_table
         puts "Opening your phone book..."
         $phone_book_db.execute %q{
-            CREATE TABLE IF NOT EXISTS phone_book (
+            CREATE TABLE IF NOT EXISTS contacts (
                 id integer primary key,
                 name varchar(50),
                 phone_number varchar(12),
@@ -31,7 +32,7 @@ $phone_book_db = SQLite3::Database.new('phone_book.db')
         state_address = gets.chomp
         print "Enter zip code: "
         zip_address = gets.chomp
-        $phone_book_db.execute("INSERT INTO phone_book (name, phone_number, street_address, city_address, state_address, zip_address) 
+        $phone_book_db.execute("INSERT INTO contacts (name, phone_number, street_address, city_address, state_address, zip_address) 
             VALUES (?, ?, ?, ?, ?, ?)", name, phone_number, street_address, city_address, state_address, zip_address)
     end
 
@@ -39,7 +40,7 @@ $phone_book_db = SQLite3::Database.new('phone_book.db')
         puts "Enter name or ID of person to find:"
         id = gets.chomp
 
-        contact = $phone_book_db.execute("SELECT * FROM phone_book WHERE name = ? OR id = ?", id, id.to_i).first
+        contact = $phone_book_db.execute("SELECT * FROM contacts WHERE name = ? OR id = ?", id, id.to_i).first
 
         unless contact
             puts "No results found"
@@ -56,7 +57,15 @@ $phone_book_db = SQLite3::Database.new('phone_book.db')
     end
 
     def show_all_contacts
-        puts $phone_book_db.execute("SELECT * FROM phone_book")
+        $phone_book_db.execute("SELECT * FROM contacts").each do |contact|
+            puts %Q{\tName: #{contact['name']}
+        Phone Number: #{contact['phone_number']}
+        Street Address: #{contact['street_address']}
+        City: #{contact['city_address']}
+        State: #{contact['state_address']}
+        Zip Code: #{contact['zip_address']}
+        }
+        end
     end
 
     def disconnect_and_quit
